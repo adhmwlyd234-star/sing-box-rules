@@ -1,0 +1,97 @@
+{
+  "log": {
+    "level": "warn"
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns_block",
+        "address": "rcode://success"
+      },
+      {
+        "tag": "dns_main",
+        "address": "1.1.1.1"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "dns_block",
+        "domain_suffix": [
+          "tencent.com",
+          "pubgmobile.com",
+          "crashsight.com"
+        ]
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "inet4_address": "172.19.0.1/30",
+      "auto_route": true,
+      "strict_route": true
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct",
+      "domain_strategy": "ipv4_only",
+      "tcp_fast_open": true
+    },
+    {
+      "type": "direct",
+      "tag": "fragment-out",
+      "domain_strategy": "ipv4_only",
+      "stream": {
+        "network": "tcp",
+        "tcp_fragment": {
+          "enable": true,
+          "packets": "tlshello",
+          "length": "10-20",
+          "interval": "5-10"
+        }
+      }
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "domain_suffix": [
+          "tencent.com",
+          "pubgmobile.com",
+          "crashsight.com"
+        ],
+        "outbound": "block"
+      },
+      {
+        "domain_keyword": [
+          "telemetry",
+          "analytics",
+          "log-upload"
+        ],
+        "outbound": "block"
+      },
+      {
+        "ip_cidr": [
+          "43.128.0.0/16",
+          "49.51.0.0/16",
+          "119.28.0.0/16"
+        ],
+        "outbound": "block"
+      },
+      {
+        "protocol": "dns",
+        "outbound": "dns_main"
+      },
+      {
+        "network": "tcp",
+        "outbound": "fragment-out"
+      }
+    ]
+  }
+}
